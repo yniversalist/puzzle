@@ -30,6 +30,7 @@
     margin: 0;
     padding: 0;
     user-select: none;
+    -webkit-user-select: none;
   } 
   
   body {
@@ -214,6 +215,7 @@
     color: var(--ink);
     cursor: grab;
     user-select: none !important;
+    -webkit-user-select: none; 
     box-shadow: 0 1px 3px var(--shadow);
     transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
     position: relative;
@@ -262,6 +264,17 @@
     margin-left: auto;
     flex-shrink: 0;
     font-style: normal;
+  }
+
+  .touch-ghost {
+    position: fixed;
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.75;
+    transform: scale(1.05);
+    box-shadow: 0 8px 24px rgba(30,58,138,0.2);
+    transition: none;
+    max-width: 260px;
   }
  
   footer {
@@ -589,9 +602,9 @@ function makeCard(item) {
   card.innerHTML = `<span>${item.text}</span>`;
   card.addEventListener('dragstart', onDragStart);
   card.addEventListener('dragend', onDragEnd);
-  card.addEventListener('touchstart', e => {
-    e.preventDefault();
-    }, { passive: false });
+  card.addEventListener('touchstart', onTouchStart, { passive: false });
+  card.addEventListener('touchmove', onTouchMove, { passive: false });
+  card.addEventListener('touchend',  onTouchEnd,  { passive: false });
   return card;
 }
 
@@ -650,6 +663,99 @@ function onDrop(e, targetId) {
   document.getElementById('score-display').classList.remove('visible');
 
   draggedId = null;
+  updateProgress();
+}
+
+// ─────────────────────────────────────────────
+// TOUCH DRAG & DROP (WebKit / iOS Safari)
+// ─────────────────────────────────────────────
+let touchGhost = null;
+let touchOffsetX = 0;
+let touchOffsetY = 0;
+let lastTouchTarget = null;
+
+function onTouchStart(e) {
+  if (locked) return;
+  e.preventDefault();
+
+  const card = e.currentTarget;
+  const touch = e.touches[0];
+  const rect = card.getBoundingClientRect();
+
+  draggedId   = card.dataset.id;
+  draggedFrom = card.parentElement.dataset.section || 'pool';
+
+  // Offset so the ghost tracks from where the finger landed on the card
+  touchOffsetX = touch.clientX - rect.left;
+  touchOffsetY = touch.clientY - rect.top;
+
+  // Create a visual clone that follows the finger
+  touchGhost = card.cloneNode(true);
+  touchGhost.className = 'card touch-ghost';
+  touchGhost.style.width  = rect.width  + 'px';
+  touchGhost.style.left   = (touch.clientX - touchOffsetX) + 'px';
+  touchGhost.style.top    = (touch.clientY - touchOffsetY) + 'px';
+  document.body.appendChild(touchGhost);
+
+  card.classList.add('dragging');
+}
+
+function onTouchMove(e) {
+  if (!touchGhost) return;
+  e.preventDefault();
+
+  const touch = e.touches[0];
+
+  // Move ghost
+  touchGhost.style.left = (touch.clientX - touchOffsetX) + 'px';
+  touchGhost.style.top  = (touch.clientY - touchOffsetY) + 'px';
+
+  // Highlight the zone under the finger
+  touchGhost.style.display = 'none';             // hide ghost so elementFromPoint works
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  touchGhost.style.display = '';
+
+  document.querySelectorAll('.drag-over').forEach(z => z.classList.remove('drag-over'));
+
+  const zone = el && (el.closest('.drop-zone') || el.closest('#card-pool'));
+  if (zone) zone.classList.add('drag-over');
+  lastTouchTarget = zone || null;
+}
+
+function onTouchEnd(e) {
+  if (!touchGhost) return;
+  e.preventDefault();
+
+  // Clean up ghost + dragging style
+  touchGhost.remove();
+  touchGhost = null;
+
+  const card = document.getElementById('card-' + draggedId);
+  if (card) card.classList.remove('dragging');
+
+  document.querySelectorAll('.drag-over').forEach(z => z.classList.remove('drag-over'));
+
+  if (!lastTouchTarget || !card) { draggedId = null; return; }
+
+  // Resolve target section id
+  const targetId = lastTouchTarget.dataset.section || 'pool';
+
+  // Reuse existing drop logic
+  card.classList.remove('correct-placed', 'wrong-placed');
+  const icon = card.querySelector('.correct-icon, .wrong-icon');
+  if (icon) icon.remove();
+
+  if (targetId === 'pool') {
+    document.getElementById('card-pool').appendChild(card);
+  } else {
+    document.getElementById('zone-' + targetId).appendChild(card);
+  }
+
+  document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('correct', 'wrong'));
+  document.getElementById('score-display').classList.remove('visible');
+
+  draggedId = null;
+  lastTouchTarget = null;
   updateProgress();
 }
 
