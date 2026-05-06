@@ -673,6 +673,33 @@ let touchGhost = null;
 let touchOffsetX = 0;
 let touchOffsetY = 0;
 let lastTouchTarget = null;
+let lastTouchY = 0;
+let scrollRAF  = null;
+
+const SCROLL_MARGIN = 80; // px from viewport edge that triggers scrolling
+const SCROLL_SPEED  = 12; // px per animation frame
+
+function startAutoScroll() {
+  if (scrollRAF) return; // already running
+  function step() {
+    const vh = window.innerHeight;
+    if (lastTouchY < SCROLL_MARGIN) {
+      // Near top — scroll up, faster the closer to the edge
+      const intensity = 1 - (lastTouchY / SCROLL_MARGIN);
+      window.scrollBy(0, -SCROLL_SPEED * intensity);
+    } else if (lastTouchY > vh - SCROLL_MARGIN) {
+      // Near bottom — scroll down
+      const intensity = (lastTouchY - (vh - SCROLL_MARGIN)) / SCROLL_MARGIN;
+      window.scrollBy(0, SCROLL_SPEED * intensity);
+    }
+    scrollRAF = requestAnimationFrame(step);
+  }
+  scrollRAF = requestAnimationFrame(step);
+}
+
+function stopAutoScroll() {
+  if (scrollRAF) { cancelAnimationFrame(scrollRAF); scrollRAF = null; }
+}
 
 function onTouchStart(e) {
   if (locked) return;
@@ -705,6 +732,8 @@ function onTouchMove(e) {
   e.preventDefault();
 
   const touch = e.touches[0];
+  lastTouchY = touch.clientY; // ← add this
+  startAutoScroll();          // ← add this
 
   // Move ghost
   touchGhost.style.left = (touch.clientX - touchOffsetX) + 'px';
@@ -725,6 +754,8 @@ function onTouchMove(e) {
 function onTouchEnd(e) {
   if (!touchGhost) return;
   e.preventDefault();
+
+  stopAutoScroll();
 
   // Clean up ghost + dragging style
   touchGhost.remove();
