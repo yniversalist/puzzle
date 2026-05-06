@@ -8,7 +8,7 @@
 <style>
   :root {
     --bg: #ffffff;
-    --bg-alt: #f0f4fa;
+    --bg-alt: #ffffff;
     --ink: #111827;
     --ink-light: #374151;
     --ink-muted: #6b7280;
@@ -20,8 +20,8 @@
     --drop-correct: #dcfce7;
     --drop-wrong:   #fee2e2;
     --card-bg: #eff6ff;
-    --card-border: #bfdbfe;
-    --shadow: rgba(30,58,138,0.10);
+    --card-border: #0b245123;
+    --shadow: rgba(30,58,138,0.0);
     --radius: 6px;
   }
  
@@ -36,7 +36,9 @@
     font-family: 'Roboto', sans-serif;
     background: var(--bg);
     color: var(--ink);
-    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
     padding: 0;
   }
  
@@ -88,7 +90,9 @@
     display: grid;
     grid-template-columns: 320px 1fr;
     gap: 0;
-    min-height: calc(100vh - 200px);
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
   }
  
   /* ── Card Pool (left panel) ── */
@@ -99,19 +103,17 @@
     position: sticky;
     top: 0;
     align-self: start;
-    height: calc(100vh - 130px);
+    height: 100%;
     overflow-y: auto;
   }
   #pool-panel h2 {
     font-family: 'Roboto', sans-serif;
-    font-size: 0.75rem;
+    font-size: 0.9rem;
     font-weight: 500;
     letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--ink-muted);
+    color: var(--accent);
     margin-bottom: 1rem;
     padding-bottom: 0.6rem;
-    border-bottom: 1px solid #bfdbfe;
   }
   #card-pool {
     display: flex;
@@ -126,6 +128,8 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
+      overflow-y: auto;
+  height: 100%;
   }
  
   .drop-zone-wrapper {
@@ -135,6 +139,8 @@
     overflow: hidden;
     box-shadow: 0 1px 4px var(--shadow);
     transition: box-shadow 0.2s;
+      flex-shrink: 0;
+
   }
   .drop-zone-wrapper:hover {
     box-shadow: 0 3px 12px var(--shadow);
@@ -150,9 +156,9 @@
   }
   .zone-number {
     font-family: 'Roboto', sans-serif;
-    font-size: 0.7rem;
+    font-size: 0.95rem;
     font-weight: 500;
-    color: #bfdbfe;
+    color: #ffffff;
     min-width: 1.4rem;
   }
   .zone-title {
@@ -201,7 +207,7 @@
     line-height: 1.45;
     color: var(--ink);
     cursor: grab;
-    user-select: none;
+    user-select: none !important;
     box-shadow: 0 1px 3px var(--shadow);
     transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
     position: relative;
@@ -215,10 +221,14 @@
     font-size: 1rem;
     flex-shrink: 0;
     margin-top: -1px;
+    user-select: none !important;
   }
+
   .card:hover {
     box-shadow: 0 3px 10px var(--shadow);
     transform: translateY(-1px);
+    user-select: none !important;
+
   }
   .card.dragging {
     opacity: 0.4;
@@ -232,25 +242,33 @@
     border-color: #f87171;
     background: #fff1f2;
   }
+  .locked .card {
+    cursor: default;
+    pointer-events: none;
+  }
+  .locked .drop-zone {
+    pointer-events: none;
+  }
+  .locked #card-pool {
+    pointer-events: none;
+  }
   .card .correct-icon, .card .wrong-icon {
     margin-left: auto;
     flex-shrink: 0;
     font-style: normal;
   }
  
-  /* ── Footer / Controls ── */
   footer {
-    border-top: 2px solid #bfdbfe;
     padding: 1rem 2rem;
-    background: var(--bg);
+    background: var(--card-bg);
     display: flex;
     align-items: center;
     gap: 1.5rem;
     flex-wrap: wrap;
+    flex-shrink: 0;
     position: sticky;
     bottom: 0;
     z-index: 100;
-    box-shadow: 0 -4px 20px var(--shadow);
   }
  
   .btn {
@@ -313,12 +331,7 @@
     width: 140px;
     overflow: hidden;
   }
-  .score-fill {
-    height: 100%;
-    border-radius: 3px;
-    background: linear-gradient(90deg, var(--accent), #60a5fa);
-    transition: width 0.7s ease;
-  }
+
   .score-msg {
     font-size: 0.83rem;
     font-style: italic;
@@ -345,15 +358,37 @@
   #pool-panel::-webkit-scrollbar { width: 4px; }
   #pool-panel::-webkit-scrollbar-thumb { background: #c8bfaf; border-radius: 2px; }
  
-  @media (max-width: 820px) {
-    main { grid-template-columns: 1fr; }
-    #pool-panel { position: static; height: auto; }
-    #card-pool { flex-direction: row; flex-wrap: wrap; }
-    header { padding: 1.5rem; }
-    header h1 { font-size: 1.4rem; }
-    #zones-panel { padding: 1rem; }
-    footer { padding: 1rem; }
+@media (max-width: 820px) {
+  body {
+    height: auto;
   }
+  main {
+    grid-template-columns: 1fr;
+    overflow: visible;
+    height: auto;
+  }
+  #pool-panel {
+    position: static;
+    height: auto;
+    overflow-y: visible;
+  }
+  #card-pool {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  #zones-panel {
+    overflow-y: visible;
+    height: auto;
+    padding: 1rem;
+  }
+  header { padding: 1.5rem; }
+  header h1 { font-size: 1.4rem; }
+  footer {
+    position: sticky;
+    bottom: 0;
+    padding: 1rem;
+  }
+}
 </style>
 </head>
 <body>
@@ -387,7 +422,6 @@
     </div>
     <div>
       <div class="score-label" id="score-label"></div>
-      <div class="score-bar" style="margin-top:0.4rem"><div class="score-fill" id="score-fill" style="width:0%"></div></div>
     </div>
     <div class="score-msg" id="score-msg"></div>
   </div>
@@ -401,24 +435,24 @@ const sections = [
   {
     id: 'titel',
     title: 'Titel',
-    number: 'I',
+    number: '1',
     items: [
-      'Benennung der Frage und ggf. zentraler Begrifflichkeiten',
-      'Eingrenzung eines Themas'
+      'Umreißung der Frage und ggf. Nennung zentraler Begrifflichkeiten',
+      'Eingrenzung eines Themenfeldes'
     ]
   },
   {
     id: 'abstract',
     title: 'Abstract',
-    number: 'II',
+    number: '2',
     items: [
-      'Zusammenfassung der Erkenntnisse und des Vorgehens zwecks schnellen Überblicks'
+      'Zusammenfassung der Erkenntnisse und des Vorgehens des Textes zwecks schnellen Überblicks'
     ]
   },
   {
     id: 'einleitung',
     title: 'Einleitung',
-    number: 'III',
+    number: '3',
     items: [
       'Formulierung eines Problems, einer Frage und einer These',
       'Grenzen der Untersuchung',
@@ -428,7 +462,7 @@ const sections = [
   {
     id: 'forschungsstand',
     title: 'Forschungsstand',
-    number: 'IV',
+    number: '4',
     items: [
       'Darstellung und Diskussion relevanter Vorarbeiten',
       'Vorläufige Positionierung'
@@ -437,15 +471,16 @@ const sections = [
   {
     id: 'methoden',
     title: 'Methoden, Begriffe und Vorgehen',
-    number: 'V',
+    number: '5',
     items: [
-      'Erläuterung des gewählten Vorgehens, der Quellenwahl, Definition zentraler Forschungsbegriffe, ggf. Verortung in bestimmtem methodischem Zugriff'
+      'Erläuterung des gewählten Vorgehens und der Quellenwahl', 
+      'Definition zentraler Forschungsbegriffe, ggf. Verortung in bestimmtem methodischem Zugriff'
     ]
   },
   {
     id: 'empirie',
     title: 'Quellenanalyse (»Empirie«)',
-    number: 'VI',
+    number: '6',
     items: [
       'Entwicklung und Falsifizierung der vertretenen These anhand von Quellen (in GeWi) bzw. allg. Daten',
       'Beleg von vertretener Meinung'
@@ -454,16 +489,17 @@ const sections = [
   {
     id: 'diskussion',
     title: 'Diskussion',
-    number: 'VII',
+    number: '7',
     items: [
-      'Einordnung der gewonnenen Erkenntnisse, ggf. Qualifizierung/Quantifizierung der Kernthese',
-      'Grenzen der Untersuchung, Einordnung im Gesamtkontext'
+      'Einordnung der zuvor gewonnenen Erkenntnisse', 
+      'ggf. Qualifizierung/Quantifizierung der Kernthese',
+      'Grenzen der Untersuchung und Einordnung im Gesamtkontext'
     ]
   },
   {
     id: 'fazit',
     title: 'Fazit',
-    number: 'VIII',
+    number: '8',
     items: [
       'Zusammenfassung des gesamten Textes',
       'Ggf. Ausblick'
@@ -493,6 +529,7 @@ function shuffle(arr) {
 
 let draggedId = null;
 let draggedFrom = null; // 'pool' or section id
+let locked = false;
 
 // ─────────────────────────────────────────────
 // BUILD UI
@@ -549,6 +586,7 @@ function makeCard(item) {
 // DRAG & DROP
 // ─────────────────────────────────────────────
 function onDragStart(e) {
+  if (locked) { e.preventDefault(); return; }
   draggedId = e.currentTarget.dataset.id;
   draggedFrom = e.currentTarget.parentElement.dataset.section || 'pool';
   e.currentTarget.classList.add('dragging');
@@ -575,6 +613,7 @@ function onDragLeave(e) {
 function onDrop(e, targetId) {
   e.preventDefault();
   e.stopPropagation();
+  if (locked) return;
   e.currentTarget.classList.remove('drag-over');
 
   const id = draggedId || e.dataTransfer.getData('text/plain');
@@ -678,52 +717,28 @@ function checkAnswers() {
   badge.textContent = (score >= 0 ? '+' : '') + score + ' Pkt.';
   badge.className = 'score-badge ' + (score > 0 ? 'positive' : score < 0 ? 'negative' : '');
 
-  document.getElementById('score-sub').textContent =
-    `Max. ${maxScore} Punkte möglich`;
   document.getElementById('score-label').textContent =
     `${correctCount} richtig, ${wrongCount} falsch (${document.querySelectorAll('#card-pool .card').length} nicht platziert)`;
-  document.getElementById('score-fill').style.width = clampedPct + '%';
 
-  const msgs = [
-    [maxScore, 'Ausgezeichnet – alles korrekt!'],
-    [Math.floor(maxScore * 0.75), 'Sehr gut! Nur wenige Korrekturen nötig.'],
-    [Math.floor(maxScore * 0.5), 'Gut – überprüfen Sie die markierten Karten.'],
-    [1, 'Noch Verbesserungsbedarf – schauen Sie sich die Abschnitte genau an.'],
-    [-Infinity, 'Versuchen Sie es noch einmal!']
-  ];
-  const msg = msgs.find(([threshold]) => score >= threshold);
-  document.getElementById('score-msg').textContent = msg[1];
+  // Lock all interaction
+  locked = true;
+  document.body.classList.add('locked');
+  document.querySelector('.btn-primary').disabled = true;
 }
 
 // ─────────────────────────────────────────────
 // RESET
 // ─────────────────────────────────────────────
 function resetAll() {
-  // Collect all cards from everywhere
-  const allCards = document.querySelectorAll('.card');
-  const pool = document.getElementById('card-pool');
-  const arr = Array.from(allCards);
-
-  arr.forEach(c => {
-    c.classList.remove('correct-placed', 'wrong-placed');
-    const ico = c.querySelector('.correct-icon, .wrong-icon');
-    if (ico) ico.remove();
-    pool.appendChild(c);
-  });
-
-  // Shuffle by re-ordering DOM children
-  const children = Array.from(pool.children);
-  const shuffled = shuffle(children);
-  shuffled.forEach(c => pool.appendChild(c));
-
-  document.querySelectorAll('.drop-zone').forEach(z => {
-    z.classList.remove('correct', 'wrong');
-  });
-
+  locked = false;
+  document.body.classList.remove('locked');
+  document.querySelector('.btn-primary').disabled = false;
   document.getElementById('score-display').classList.remove('visible');
-  document.getElementById('score-fill').style.width = '0%';
   document.getElementById('score-text').className = 'score-badge';
-  updateProgress();
+
+  // Full rebuild from scratch
+  buildZones();
+  buildPool();
 }
 
 // ─────────────────────────────────────────────
